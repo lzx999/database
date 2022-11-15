@@ -39,7 +39,7 @@ class TrieNode {
    *
    * @param key_char Key character of this trie node
    */
-  explicit TrieNode(char key_char) : key_char_(key_char), is_end_(false) {}
+  explicit TrieNode(char key_char) : key_char_(key_char) {}
 
   /**
    * TODO(P0): Add implementation
@@ -252,20 +252,19 @@ class Trie {
   /// @param key key
   /// @param st output param, stack stored the path
   /// @return true if exist, else false
-  bool isExist(const std::string &key, std::stack<std::unique_ptr<TrieNode> *> &st) {
+  bool IsExist(const std::string &key, std::stack<std::unique_ptr<TrieNode> *> *st) {
     auto cur = &root_;
-    auto nxt = &root_;
-    st.emplace(cur);
+    std::unique_ptr<TrieNode> *nxt = nullptr;
+    st->emplace(cur);
     for (char c : key) {
       nxt = (*cur)->GetChildNode(c);
-      if (nxt == nullptr) return false;
+      if (nxt == nullptr) {
+        return false;
+      }
       cur = nxt;
-      st.emplace(cur);
+      st->emplace(cur);
     }
-    if (!(*cur)->IsEndNode()) {
-      return false;
-    }
-    return true;
+    return (*cur)->IsEndNode();
   }
 
  public:
@@ -305,7 +304,7 @@ class Trie {
    */
   template <typename T>
   bool Insert(const std::string &key, T value) {
-    lock_guard_w lock(latch_);
+    lock_guard_w lock(&latch_);
     if (key.empty()) {
       return false;
     }
@@ -345,12 +344,12 @@ class Trie {
    * @return True if key exists and is removed, false otherwise
    */
   bool Remove(const std::string &key) {
-    lock_guard_w lock(latch_);
+    lock_guard_w lock(&latch_);
     if (key.empty()) {
       return false;
     }
     std::stack<std::unique_ptr<TrieNode> *> st;
-    if (!isExist(key, st)) {
+    if (!IsExist(key, &st)) {
       return false;
     }
     (*st.top())->SetEndNode(false);
@@ -388,8 +387,8 @@ class Trie {
   template <typename T>
   T GetValue(const std::string &key, bool *success) {
     std::stack<std::unique_ptr<TrieNode> *> st;
-    lock_guard_r lock(latch_);
-    if (key.empty() || !isExist(key, st)) {
+    lock_guard_r lock(&latch_);
+    if (key.empty() || !IsExist(key, &st)) {
       *success = false;
       return {};
     }

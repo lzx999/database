@@ -50,19 +50,19 @@ class ReaderWriterLatch {
 
 class lock_guard_r {
  private:
-  ReaderWriterLatch &rwlock_;
+  ReaderWriterLatch *rwlock_;
 
  public:
-  explicit lock_guard_r(ReaderWriterLatch &rwlock) : rwlock_(rwlock) { rwlock_.RLock(); }
-  ~lock_guard_r() { rwlock_.RUnlock(); }
+  explicit lock_guard_r(ReaderWriterLatch *rwlock) : rwlock_(rwlock) { rwlock_->RLock(); }
+  ~lock_guard_r() { rwlock_->RUnlock(); }
 };
 class lock_guard_w {
  private:
-  ReaderWriterLatch &rwlock_;
+  ReaderWriterLatch *rwlock_;
 
  public:
-  explicit lock_guard_w(ReaderWriterLatch &rwlock) : rwlock_(rwlock) { rwlock_.WLock(); }
-  ~lock_guard_w() { rwlock_.WUnlock(); }
+  explicit lock_guard_w(ReaderWriterLatch *rwlock) : rwlock_(rwlock) { rwlock_->WLock(); }
+  ~lock_guard_w() { rwlock_->WUnlock(); }
 };
 
 }  // namespace bustub
